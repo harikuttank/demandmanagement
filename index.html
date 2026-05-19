@@ -1,0 +1,647 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Demand Management Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#eff6ff',
+                primaryTextColor: '#1e3a8a',
+                primaryBorderColor: '#3b82f6',
+                lineColor: '#94a3b8',
+                secondaryColor: '#fef08a',
+                tertiaryColor: '#ffffff'
+            },
+            flowchart: { curve: 'basis' }
+        });
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f8fafc; }
+        .mermaid { display: flex; justify-content: center; }
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #ffffff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Custom range slider styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px; width: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px;
+            cursor: pointer;
+            background: #e2e8f0;
+            border-radius: 3px;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen pb-20 animate-fade-in">
+
+    <!-- Navbar / App Header -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span class="font-bold text-xl tracking-tight">Demand OS</span>
+                </div>
+                <!-- Navigation Tabs -->
+                <nav class="flex space-x-1" id="tabs">
+                    <button data-target="tab-process" class="tab-btn px-4 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors">Process Flow</button>
+                    <button data-target="tab-intake" class="tab-btn px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Intake Form (G1)</button>
+                    <button data-target="tab-scoring" class="tab-btn px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Scoring Tool (G2)</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+
+        <!-- API KEY SETTING BANNER (CRITICAL FOR GITHUB DEPLOYMENT) -->
+        <div id="apiKeyBanner" class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                <div>
+                    <h4 class="font-bold text-sm">Gemini AI Key Required</h4>
+                    <p class="text-xs text-amber-700">Please configure your Gemini API key to unlock automated intake drafting and prioritized scoring features.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="password" id="keyConfigInput" class="p-2 border border-amber-300 rounded-lg text-xs w-48 focus:ring-1 focus:ring-amber-500" placeholder="Paste API Key here...">
+                <button id="saveKeyBtn" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded-lg text-xs transition-colors">Save Key</button>
+            </div>
+        </div>
+
+        <!-- TAB 1: PROCESS FLOW -->
+        <div id="tab-process" class="tab-content active">
+            <div class="mb-8 text-center">
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Enterprise Process Flow</h1>
+                <p class="text-slate-500 mt-2">End-to-end governance gates and role interactions.</p>
+            </div>
+            
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-8">
+                <div class="mermaid overflow-x-auto">
+                    flowchart TD
+                        classDef stage fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e40af,font-weight:bold;
+                        classDef gate fill:#fef08a,stroke:#ca8a04,stroke-width:2px,color:#854d0e,shape:diamond,font-weight:bold;
+                        classDef terminate fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#991b1b,border-radius:10px;
+                        classDef success fill:#dcfce3,stroke:#22c55e,stroke-width:2px,color:#166534,border-radius:10px;
+
+                        Req([Requestor Submits Intake]) --> A
+                        A[Stage A: Intake]:::stage --> B{Gate G1: Triage}:::gate
+                        B -- Reject --> R1([Rejected]):::terminate
+                        B -- Rework --> A
+                        B -- Accept --> C
+                        C[Stage C: Shaping]:::stage --> D{Gate G2: Prioritization}:::gate
+                        D -- Drop --> R2([Dropped]):::terminate
+                        D -- Prioritize --> E{Gate G3: Funding}:::gate
+                        E -- Reject --> R3([Rejected]):::terminate
+                        E -- Fund --> F[Stage F: Delivery]:::stage
+                        F --> End([Active Delivery]):::success
+                </div>
+            </section>
+
+            <!-- RACI Guide -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-100 bg-slate-50">
+                    <h2 class="text-lg font-bold text-slate-800">Role Accountability & Governance</h2>
+                </div>
+                <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <h3 class="font-bold text-blue-900 mb-2">Demand Manager / PMO</h3>
+                        <p class="text-sm text-blue-800">Owns process execution and audit trails. Runs G1 Triage, orchestrates shaping, coordinates scoring, maintains system of record.</p>
+                    </div>
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                        <h3 class="font-bold text-amber-900 mb-2">Portfolio Council (PRB)</h3>
+                        <p class="text-sm text-amber-800">Governance body for G2 Prioritization. Reviews scores, applies capacity constraints, makes trade-off decisions.</p>
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                        <h3 class="font-bold text-emerald-900 mb-2">Investment Board (IRB)</h3>
+                        <p class="text-sm text-emerald-800">Governance body for G3 Funding. Approves refined business cases and authorizes funding reallocation.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- TAB 2: INTAKE FORM (Template 1) -->
+        <div id="tab-intake" class="tab-content">
+            <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Demand Intake Form</h1>
+                    <p class="text-slate-500 mt-1">Capture consistent, comparable demand information (Stage A).</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- AI Assistant Panel -->
+                <div class="lg:col-span-1">
+                    <div class="bg-gradient-to-b from-blue-50 to-white rounded-2xl shadow-sm border border-blue-100 p-6 sticky top-24">
+                        <h3 class="text-lg font-bold text-blue-900 flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            AI Intake Drafter
+                        </h3>
+                        <p class="text-sm text-slate-600 mb-4">Paste a raw request, email, or chat from a stakeholder. Gemini will extract and format it into the standard playbook fields.</p>
+                        
+                        <textarea id="aiRawRequest" rows="6" class="w-full p-3 border border-slate-300 rounded-lg text-sm mb-4 focus:ring-2 focus:ring-blue-500" placeholder="E.g., Hey PMO, we need to upgrade the legacy CRM by Q3. It's crashing daily causing us to lose sales data. Let me know what you need to get this started."></textarea>
+                        
+                        <button id="btnAiIntake" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg flex items-center justify-center transition-colors">
+                            <span id="aiIntakeText">✨ Auto-Fill Form</span>
+                            <div id="aiIntakeLoader" class="loader hidden ml-2"></div>
+                        </button>
+                        <div id="aiIntakeError" class="hidden mt-3 bg-red-50 text-red-700 p-3 rounded-lg text-xs border border-red-200"></div>
+                    </div>
+                </div>
+
+                <!-- Actual Form (Template 1) -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+                        <form id="intakeForm" class="space-y-6">
+                            
+                            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-2">A. Request Details</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Demand Title *</label>
+                                    <input type="text" id="in_title" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="A concise professional title">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Requestor</label>
+                                    <input type="text" id="in_requestor" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Business Sponsor *</label>
+                                    <input type="text" id="in_sponsor" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-2 pt-4">B. Business Need</h4>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Problem Statement *</label>
+                                <p class="text-xs text-slate-500 mb-2">What is happening and why it matters (avoid solution-first language).</p>
+                                <textarea id="in_problem" rows="3" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Desired Outcomes *</label>
+                                <p class="text-xs text-slate-500 mb-2">What will be different; include metrics if possible.</p>
+                                <textarea id="in_outcomes" rows="3" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                            </div>
+
+                            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-2 pt-4">C. Classification & Value</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Category *</label>
+                                    <select id="in_category" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        <option value="">-- Select --</option>
+                                        <option value="Run">Run</option>
+                                        <option value="Grow">Grow</option>
+                                        <option value="Transform">Transform</option>
+                                        <option value="Mandatory/Regulatory">Mandatory/Regulatory</option>
+                                        <option value="Security/Risk">Security/Risk</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Value Type</label>
+                                    <select id="in_valueType" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        <option value="">-- Select --</option>
+                                        <option value="Revenue">Revenue</option>
+                                        <option value="Cost Savings">Cost Savings</option>
+                                        <option value="Risk Reduction">Risk Reduction</option>
+                                        <option value="Customer Experience">Customer Experience</option>
+                                        <option value="Productivity">Productivity</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Time Criticality</label>
+                                    <select id="in_timeCrit" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        <option value="">-- Select --</option>
+                                        <option value="Regulatory deadline">Regulatory deadline</option>
+                                        <option value="Contractual commitment">Contractual commitment</option>
+                                        <option value="Market opportunity">Market opportunity</option>
+                                        <option value="Operational need">Operational need</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="pt-6 border-t border-slate-100 flex justify-end">
+                                <button type="button" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm">Submit to Triage (G1)</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SCORING CALCULATOR -->
+        <div id="tab-scoring" class="tab-content">
+            <div class="mb-6">
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Demand Scoring Calculator</h1>
+                <p class="text-slate-500 mt-1">Interactive weighted rubric for objective G2 Prioritization.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Calculator Inputs & Dimensions -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- AI Scorer Block -->
+                    <div class="bg-gradient-to-r from-purple-50 to-white rounded-2xl shadow-sm border border-purple-100 p-6 flex flex-col md:flex-row gap-4 items-stretch">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-purple-900 flex items-center mb-2">
+                                <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                                AI Scoring Assistant
+                            </h3>
+                            <textarea id="aiScoringInput" rows="3" class="w-full p-2.5 border border-purple-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500" placeholder="Paste business case or project scope to let AI suggest scores & rationales based on playbook rubrics..."></textarea>
+                        </div>
+                        <div class="flex flex-col justify-end">
+                            <button id="btnAiScore" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 px-5 rounded-lg flex items-center transition-colors h-10 w-full md:w-auto">
+                                <span id="aiScoreText">Suggest Scores</span>
+                                <div id="aiScoreLoader" class="loader hidden ml-2"></div>
+                            </button>
+                        </div>
+                        <div id="aiScoreError" class="hidden absolute mt-2 bg-red-50 text-red-700 p-2 rounded text-xs"></div>
+                    </div>
+
+                    <!-- Sliders Table -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                                        <th class="p-4 font-semibold w-1/4">Dimension</th>
+                                        <th class="p-4 font-semibold w-1/12 text-center">Weight</th>
+                                        <th class="p-4 font-semibold w-1/3">Score (1-5)</th>
+                                        <th class="p-4 font-semibold w-1/3">Rationale</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-slate-100" id="scoringTableBody">
+                                    <!-- Rows generated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sticky Result Panel -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 sticky top-24">
+                        <h3 class="text-lg font-bold text-slate-800 mb-6 border-b pb-2">Scoring Outcome</h3>
+                        
+                        <div class="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-xl mb-6">
+                            <span class="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">Total Score</span>
+                            <div class="text-5xl font-black text-slate-900" id="displayScore">0</div>
+                            <span class="text-slate-400 text-sm mt-1">out of 100</span>
+                        </div>
+
+                        <div class="mb-6">
+                            <span class="block text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2 text-center">Priority Band</span>
+                            <div id="displayBand" class="py-3 px-4 rounded-lg text-center font-bold text-lg bg-slate-200 text-slate-600 border border-slate-300 transition-colors duration-300">
+                                Unscored
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Override Lane?</label>
+                                <select class="w-full p-2 border border-slate-300 rounded text-sm bg-slate-50">
+                                    <option>None (Standard)</option>
+                                    <option>Mandatory / Regulatory</option>
+                                    <option>Security / Risk Remediation</option>
+                                    <option>Executive Mandate</option>
+                                </select>
+                                <p class="text-[10px] text-slate-500 mt-1 leading-tight">If set, overrides standard priority band but retains score for transparency.</p>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-lg shadow-sm">Save Decision to G2 Log</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Gemini & Logic Scripts -->
+    <script>
+        // --- API Key Management (Local Storage & Local state to protect safety) ---
+        let currentApiKey = localStorage.getItem('DEMAND_OS_GEMINI_KEY') || "";
+        const apiKeyBanner = document.getElementById('apiKeyBanner');
+        const keyConfigInput = document.getElementById('keyConfigInput');
+        const saveKeyBtn = document.getElementById('saveKeyBtn');
+
+        // Initial key sync
+        if (currentApiKey) {
+            apiKeyBanner.classList.add('hidden');
+        }
+
+        saveKeyBtn.addEventListener('click', () => {
+            const enteredKey = keyConfigInput.value.trim();
+            if (enteredKey) {
+                localStorage.setItem('DEMAND_OS_GEMINI_KEY', enteredKey);
+                currentApiKey = enteredKey;
+                apiKeyBanner.classList.add('hidden');
+                keyConfigInput.value = "";
+            }
+        });
+
+        // --- Tab Navigation Logic ---
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('bg-slate-800', 'text-white');
+                    t.classList.add('text-slate-300');
+                });
+                tab.classList.remove('text-slate-300');
+                tab.classList.add('bg-slate-800', 'text-white');
+
+                const target = tab.getAttribute('data-target');
+                contents.forEach(c => {
+                    c.classList.remove('active');
+                    if (c.id === target) c.classList.add('active');
+                });
+            });
+        });
+
+
+        // --- Scoring Calculator Logic (from Excel CSV constraints) ---
+        const dimensions = [
+            { id: 'strat', name: 'Strategic Alignment', weight: 0.25, score: 1 },
+            { id: 'fin', name: 'Financial Value', weight: 0.20, score: 1 },
+            { id: 'risk', name: 'Risk / Compliance Impact', weight: 0.15, score: 1 },
+            { id: 'bus', name: 'Business / Customer Impact', weight: 0.15, score: 1 },
+            { id: 'time', name: 'Time Criticality', weight: 0.10, score: 1 },
+            { id: 'comp', name: 'Complexity / Effort (Inverse)', weight: 0.10, score: 1, note: '5 = Low Effort' },
+            { id: 'arch', name: 'Architecture / Tech Fit', weight: 0.05, score: 1 }
+        ];
+
+        const tbody = document.getElementById('scoringTableBody');
+        const displayScore = document.getElementById('displayScore');
+        const displayBand = document.getElementById('displayBand');
+
+        // Render rows
+        dimensions.forEach((dim, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="p-4 align-top">
+                    <div class="font-medium text-slate-800">${dim.name}</div>
+                    ${dim.note ? `<div class="text-[10px] text-slate-500 mt-1">${dim.note}</div>` : ''}
+                </td>
+                <td class="p-4 align-top text-center text-slate-500 text-sm font-semibold bg-slate-50">
+                    ${dim.weight * 100}%
+                </td>
+                <td class="p-4 align-top">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-slate-400 font-bold">1</span>
+                        <input type="range" id="slider_${dim.id}" min="1" max="5" value="1" step="1" class="flex-1 dim-slider" data-idx="${idx}">
+                        <span class="text-xs text-slate-400 font-bold">5</span>
+                    </div>
+                    <div class="text-center mt-2 font-bold text-blue-600 text-lg" id="val_${dim.id}">1</div>
+                </td>
+                <td class="p-4 align-top">
+                    <input type="text" id="rat_${dim.id}" class="w-full p-2 text-sm border border-slate-200 rounded-md focus:ring-1 focus:ring-blue-500 bg-slate-50" placeholder="Brief rationale...">
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        function calculateScore() {
+            let total = 0;
+            dimensions.forEach(dim => {
+                total += (dim.score * dim.weight * 20); 
+            });
+            
+            const roundedTotal = Math.round(total);
+            displayScore.innerText = roundedTotal;
+
+            // Priority Bands
+            displayBand.className = "py-3 px-4 rounded-lg text-center font-bold text-lg border transition-colors duration-300";
+            if (roundedTotal >= 80) {
+                displayBand.innerText = "P1 - High";
+                displayBand.classList.add('bg-green-100', 'text-green-800', 'border-green-200');
+            } else if (roundedTotal >= 65) {
+                displayBand.innerText = "P2 - Medium";
+                displayBand.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-200');
+            } else if (roundedTotal >= 50) {
+                displayBand.innerText = "P3 - Low";
+                displayBand.classList.add('bg-amber-100', 'text-amber-800', 'border-amber-200');
+            } else {
+                displayBand.innerText = "P4 - Not Prioritized";
+                displayBand.classList.add('bg-slate-200', 'text-slate-600', 'border-slate-300');
+            }
+        }
+
+        // Attach listeners to sliders
+        document.querySelectorAll('.dim-slider').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const idx = e.target.getAttribute('data-idx');
+                const val = parseInt(e.target.value);
+                dimensions[idx].score = val;
+                document.getElementById(`val_${dimensions[idx].id}`).innerText = val;
+                calculateScore();
+            });
+        });
+        calculateScore(); // Initial run
+
+
+        // --- Gemini API Integration ---
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            let delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        const errBody = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errBody}`);
+                    }
+                    return await response.json();
+                } catch (e) {
+                    if (i === maxRetries - 1) throw e;
+                    console.warn(`Attempt ${i+1} failed, retrying in ${delays[i]}ms...`);
+                    await new Promise(r => setTimeout(r, delays[i]));
+                }
+            }
+        }
+
+        async function callGeminiJSON(prompt, systemPrompt, responseSchema) {
+            if (!currentApiKey) {
+                apiKeyBanner.classList.remove('hidden');
+                apiKeyBanner.scrollIntoView({ behavior: 'smooth' });
+                throw new Error("API Key is missing. Configured via safety banner.");
+            }
+
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${currentApiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema
+                }
+            };
+            const data = await fetchWithRetry(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!responseText) throw new Error("Empty response from Gemini");
+            return JSON.parse(responseText);
+        }
+
+        // AI Intake Drafter
+        const btnAiIntake = document.getElementById('btnAiIntake');
+        const aiRawRequest = document.getElementById('aiRawRequest');
+        const aiIntakeError = document.getElementById('aiIntakeError');
+        const aiIntakeText = document.getElementById('aiIntakeText');
+        const aiIntakeLoader = document.getElementById('aiIntakeLoader');
+
+        btnAiIntake.addEventListener('click', async () => {
+            const prompt = aiRawRequest.value.trim();
+            if(!prompt) return;
+
+            aiIntakeText.innerText = "Drafting...";
+            aiIntakeLoader.classList.remove('hidden');
+            aiIntakeError.classList.add('hidden');
+            btnAiIntake.disabled = true;
+
+            const intakeSchema = {
+                type: "OBJECT",
+                properties: {
+                    title: { type: "STRING" },
+                    requestor: { type: "STRING", description: "Infer from text or leave blank" },
+                    problemStatement: { type: "STRING", description: "Objective what/why" },
+                    outcomes: { type: "STRING" },
+                    category: { type: "STRING", description: "Run, Grow, Transform, Mandatory/Regulatory, Security/Risk" },
+                    valueType: { type: "STRING", description: "Revenue, Cost Savings, Cost Avoidance, Risk Reduction, Customer Experience, Productivity" },
+                    timeCriticality: { type: "STRING", description: "Regulatory deadline, Contractual commitment, Market opportunity, Operational need" }
+                }
+            };
+
+            const sysPrompt = "You are an expert IT Demand Manager. Convert the raw user request into a structured playbook demand brief. Be professional and objective.";
+
+            try {
+                const result = await callGeminiJSON(prompt, sysPrompt, intakeSchema);
+                
+                // Populate UI Form Fields
+                document.getElementById('in_title').value = result.title || '';
+                document.getElementById('in_requestor').value = result.requestor || '';
+                document.getElementById('in_problem').value = result.problemStatement || '';
+                document.getElementById('in_outcomes').value = result.outcomes || '';
+                
+                // Set selects if matched
+                const setSelect = (id, val) => {
+                    const sel = document.getElementById(id);
+                    for(let i=0; i<sel.options.length; i++) {
+                        if(sel.options[i].value === val) sel.selectedIndex = i;
+                    }
+                };
+                setSelect('in_category', result.category);
+                setSelect('in_valueType', result.valueType);
+                setSelect('in_timeCrit', result.timeCriticality);
+                
+            } catch(e) {
+                aiIntakeError.innerText = e.message || "Failed to draft form. Please verify your API Key and try again.";
+                aiIntakeError.classList.remove('hidden');
+            } finally {
+                aiIntakeText.innerText = "✨ Auto-Fill Form";
+                aiIntakeLoader.classList.add('hidden');
+                btnAiIntake.disabled = false;
+            }
+        });
+
+        // AI Prioritization Scorer
+        const btnAiScore = document.getElementById('btnAiScore');
+        const aiScoringInput = document.getElementById('aiScoringInput');
+        const aiScoreError = document.getElementById('aiScoreError');
+        
+        btnAiScore.addEventListener('click', async () => {
+            const prompt = aiScoringInput.value.trim();
+            if(!prompt) return;
+
+            document.getElementById('aiScoreText').innerText = "Analyzing...";
+            document.getElementById('aiScoreLoader').classList.remove('hidden');
+            aiScoreError.classList.add('hidden');
+            btnAiScore.disabled = true;
+
+            const scoreSchema = {
+                type: "OBJECT",
+                properties: {
+                    strat: { type: "OBJECT", properties: { score: {type: "INTEGER"}, rationale: {type: "STRING"} } },
+                    fin: { type: "OBJECT", properties: { score: {type: "INTEGER"}, rationale: {type: "STRING"} } },
+                    risk: { type: "OBJECT", properties: { score: {type: "INTEGER"}, rationale: {type: "STRING"} } },
+                    bus: { type: "OBJECT", properties: { score: {type: "INTEGER"}, rationale: {type: "STRING"} } },
+                    time: { type: "OBJECT", properties: { score: {type: "INTEGER"}, rationale: {type: "STRING"} } },
+                    comp: { type: "OBJECT", properties: { score: {type: "INTEGER"}, rationale: {type: "STRING"} } },
+                    arch: { type: "OBJECT", properties: { score: {type: "INTEGER"}, rationale: {type: "STRING"} } }
+                }
+            };
+
+            const sysPrompt = `Score the project description from 1 (Low) to 5 (High) across these standard playbook dimensions:
+1. strat: Strategic Alignment
+2. fin: Financial Value
+3. risk: Risk / Compliance Impact
+4. bus: Business / Customer Impact
+5. time: Time Criticality
+6. comp: Complexity / Effort (Inverse! 5 means very LOW effort/quick win, 1 means highly complex)
+7. arch: Architecture / Tech Fit
+Return a score (1-5) and a short 1-sentence rationale for each.`;
+
+            try {
+                const result = await callGeminiJSON(prompt, sysPrompt, scoreSchema);
+                
+                // Update internal array, UI sliders, and text fields
+                dimensions.forEach((dim, idx) => {
+                    const aiData = result[dim.id];
+                    if (aiData) {
+                        const s = Math.max(1, Math.min(5, aiData.score));
+                        dim.score = s;
+                        
+                        // Update Slider UI
+                        document.getElementById(`slider_${dim.id}`).value = s;
+                        document.getElementById(`val_${dim.id}`).innerText = s;
+                        
+                        // Update Text Input UI
+                        document.getElementById(`rat_${dim.id}`).value = aiData.rationale;
+                    }
+                });
+                
+                // Trigger recalculation
+                calculateScore();
+                
+            } catch(e) {
+                aiScoreError.innerText = e.message || "Error calculating scores. Verify key & try again.";
+                aiScoreError.classList.remove('hidden');
+            } finally {
+                document.getElementById('aiScoreText').innerText = "Suggest Scores";
+                document.getElementById('aiScoreLoader').classList.add('hidden');
+                btnAiScore.disabled = false;
+            }
+        });
+
+    </script>
+</body>
+</html>
